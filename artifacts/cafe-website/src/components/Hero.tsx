@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useGetImages } from "@workspace/api-client-react";
 
 export function Hero() {
   const scrollToSection = (id: string) => {
@@ -23,15 +24,20 @@ export function Hero() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
   };
+
+  const { data: heroImages } = useGetImages({ category: "hero" });
+  const heroBackground = heroImages && heroImages.length > 0
+    ? `/api/storage${heroImages[0].objectPath}`
+    : "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1920&q=80";
 
   return (
     <section
       id="home"
       className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden"
       style={{
-        backgroundImage: "url('https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1920&q=80')",
+        backgroundImage: `url('${heroBackground}')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",

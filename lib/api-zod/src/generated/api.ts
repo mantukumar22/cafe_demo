@@ -52,3 +52,99 @@ export const GetMenuResponseItem = zod.object({
 export const GetMenuResponse = zod.array(GetMenuResponseItem)
 
 
+/**
+ * Returns images filtered by category, or all images if no category provided
+ * @summary Get images by category
+ */
+export const GetImagesQueryParams = zod.object({
+  "category": zod.coerce.string().optional()
+})
+
+export const GetImagesResponseItem = zod.object({
+  "id": zod.string(),
+  "category": zod.string(),
+  "objectPath": zod.string(),
+  "label": zod.string(),
+  "uploadedAt": zod.string()
+})
+export const GetImagesResponse = zod.array(GetImagesResponseItem)
+
+
+/**
+ * Saves image metadata after a successful object storage upload
+ * @summary Register an uploaded image
+ */
+export const RegisterImageBody = zod.object({
+  "category": zod.string(),
+  "objectPath": zod.string(),
+  "label": zod.string()
+})
+
+export const RegisterImageResponse = zod.object({
+  "id": zod.string(),
+  "category": zod.string(),
+  "objectPath": zod.string(),
+  "label": zod.string(),
+  "uploadedAt": zod.string()
+})
+
+
+/**
+ * Removes image metadata (admin only)
+ * @summary Delete an image
+ */
+export const DeleteImageParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteImageResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Request a presigned URL for file upload
+ */
+
+
+
+
+
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string().min(1),
+  "size": zod.number().min(1),
+  "contentType": zod.string().min(1)
+})
+
+
+
+
+
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string().url(),
+  "objectPath": zod.string(),
+  "metadata": zod.object({
+  "name": zod.string().min(1),
+  "size": zod.number().min(1),
+  "contentType": zod.string().min(1)
+}).optional()
+})
+
+
+/**
+ * @summary Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+ */
+export const GetPublicObjectParams = zod.object({
+  "filePath": zod.coerce.string()
+})
+
+
+/**
+ * @summary Serve an object entity from PRIVATE_OBJECT_DIR
+ */
+export const GetStorageObjectParams = zod.object({
+  "objectPath": zod.coerce.string()
+})
+
+

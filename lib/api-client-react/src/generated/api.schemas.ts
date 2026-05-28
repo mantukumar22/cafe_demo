@@ -31,7 +31,44 @@ export interface MenuItem {
   image: string;
 }
 
-export interface ErrorResponse {
+export interface CafeImage {
+  id: string;
+  category: string;
+  objectPath: string;
+  label: string;
+  uploadedAt: string;
+}
+
+export interface RegisterImageInput {
+  category: string;
+  objectPath: string;
+  label: string;
+}
+
+export interface DeleteResult {
+  success: boolean;
+}
+
+export interface ErrorEnvelope {
   error: string;
 }
+
+export interface UploadUrlRequest {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlRequest;
+}
+
+export type GetImagesParams = {
+category?: string;
+};
 

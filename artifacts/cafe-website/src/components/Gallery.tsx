@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useGetImages } from "@workspace/api-client-react";
 
-const IMAGES = [
+const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80",
   "https://images.unsplash.com/photo-1498804103079-a6351b050096?w=600&q=80",
   "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&q=80",
@@ -16,6 +17,11 @@ const IMAGES = [
 
 export function Gallery() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const { data: apiImages } = useGetImages({ category: "gallery" });
+  const images = (apiImages && apiImages.length > 0)
+    ? apiImages.map(img => ({ src: `/api/storage${img.objectPath}`, alt: img.label || "Gallery image" }))
+    : FALLBACK_IMAGES.map(src => ({ src, alt: "Gallery image" }));
 
   return (
     <section id="gallery" className="py-24 md:py-32 bg-[#FDF6EC]">
@@ -38,7 +44,7 @@ export function Gallery() {
         </div>
 
         <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-          {IMAGES.map((src, index) => (
+          {images.map((img, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -46,12 +52,12 @@ export function Gallery() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
               className="relative overflow-hidden rounded-xl cursor-pointer group break-inside-avoid"
-              onClick={() => setSelectedImage(src)}
+              onClick={() => setSelectedImage(img.src)}
               data-testid={`gallery-image-${index}`}
             >
               <img
-                src={src}
-                alt={`Gallery image ${index + 1}`}
+                src={img.src}
+                alt={img.alt}
                 className="w-full h-auto object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
               />
               <div className="absolute inset-0 bg-[#1C0A00]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

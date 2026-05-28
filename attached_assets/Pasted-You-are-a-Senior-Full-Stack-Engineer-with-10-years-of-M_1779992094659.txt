@@ -1,0 +1,318 @@
+You are a Senior Full-Stack Engineer with 10 years of MNC experience.
+Extend the existing Café Website with a complete IMAGE MANAGEMENT SYSTEM
+where café owners can upload photos from an Admin Panel and they 
+auto-render on the website in structured, categorized gallery sections.
+
+Follow EVERY instruction below precisely.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 COMPLETE FOLDER STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cafe-website/
+│
+├── client/                              ← React Frontend
+│   ├── public/
+│   │   └── favicon.ico
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── logo.png
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Hero.jsx
+│   │   │   ├── About.jsx
+│   │   │   ├── Menu.jsx
+│   │   │   ├── Services.jsx
+│   │   │   ├── Gallery.jsx              ← reads from API by category
+│   │   │   ├── Contact.jsx
+│   │   │   ├── WhatsAppButton.jsx
+│   │   │   └── Footer.jsx
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   └── Admin.jsx                ← Admin upload panel page
+│   │   ├── styles/
+│   │   │   └── globals.css
+│   │   ├── App.jsx                      ← Route: "/" and "/admin"
+│   │   └── main.jsx
+│   ├── .env
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+│
+├── server/
+│   ├── routes/
+│   │   ├── contact.js
+│   │   └── images.js                   ← GET and POST image routes
+│   ├── controllers/
+│   │   ├── contactController.js
+│   │   └── imageController.js          ← handles upload + fetch logic
+│   ├── middleware/
+│   │   ├── errorHandler.js
+│   │   └── upload.js                   ← Multer config
+│   ├── uploads/                        ← ALL uploaded images stored here
+│   │   ├── hero/                       ← Hero section background photos
+│   │   ├── home/                       ← Homepage ambiance photos
+│   │   ├── inner-view/                 ← Interior/indoor café shots
+│   │   ├── menu-items/                 ← Food and drink photos
+│   │   ├── events/                     ← Events and gatherings photos
+│   │   ├── team/                       ← Staff and barista photos
+│   │   └── gallery/                    ← General gallery photos
+│   ├── db/
+│   │   └── images.json                 ← JSON file-based DB 
+│   │                                      (no MongoDB needed)
+│   ├── .env
+│   ├── server.js
+│   └── package.json
+│
+├── .gitignore
+└── README.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ TECH STACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend:
+- React 18 + Vite
+- React Router DOM v6 (for /admin route)
+- Tailwind CSS
+- Framer Motion
+- Axios
+- React Icons
+- React Hot Toast (upload success/error notifications)
+- React Dropzone (drag & drop image upload UI)
+
+Backend:
+- Node.js + Express
+- Multer (multipart file upload, stores to /uploads subfolders)
+- Sharp (image compression & resizing before saving)
+- fs/path (native Node — read images.json as DB)
+- CORS, dotenv, helmet, express-validator
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 ENV FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+server/.env:
+PORT=5000
+EMAIL_USER=your-gmail@gmail.com
+EMAIL_PASS=your-app-password
+RECEIVER_EMAIL=owner@gmail.com
+CLIENT_URL=http://localhost:5173
+ADMIN_SECRET_KEY=cafesecret123       ← simple password for admin panel
+
+client/.env:
+VITE_API_URL=http://localhost:5000
+VITE_WHATSAPP_NUMBER=91XXXXXXXXXX
+VITE_CAFE_NAME=Brewed Bliss Café
+VITE_ADMIN_KEY=cafesecret123        ← must match server key
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 BACKEND: IMAGE SYSTEM LOGIC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. server/middleware/upload.js
+   - Configure Multer with diskStorage
+   - destination: dynamically set to server/uploads/{category}/
+     based on req.body.category field sent from frontend
+   - filename: Date.now() + '-' + originalname (sanitized)
+   - fileFilter: allow only image/jpeg, image/png, image/webp
+   - limits: maxFileSize 5MB, maxFiles 10 per request
+
+2. server/db/images.json
+   - JSON array storing metadata of every uploaded image:
+   [
+     {
+       "id": "uuid-here",
+       "category": "inner-view",
+       "filename": "1700000000-interior.jpg",
+       "path": "/uploads/inner-view/1700000000-interior.jpg",
+       "label": "Cozy Corner",
+       "uploadedAt": "2024-01-01T10:00:00Z"
+     }
+   ]
+   - On every upload, append the new entry to this JSON file
+   - This is your lightweight DB — no MongoDB needed
+
+3. server/controllers/imageController.js
+   - uploadImages(req, res):
+       * Validate admin key from request header 'x-admin-key'
+       * Use Sharp to resize each image to max 1200px wide,
+         compress to 80% quality, save as WebP in the folder
+       * Append metadata to images.json
+       * Return success response with uploaded file paths
+   - getImagesByCategory(req, res):
+       * Read images.json
+       * Filter by ?category= query param
+       * Return array of image objects
+   - getAllImages(req, res):
+       * Return full images.json
+   - deleteImage(req, res):
+       * Validate admin key
+       * Remove file from disk
+       * Remove entry from images.json
+
+4. server/routes/images.js
+   POST   /api/images/upload         ← upload (admin only)
+   GET    /api/images?category=hero  ← fetch by category
+   GET    /api/images/all            ← fetch all
+   DELETE /api/images/:id            ← delete by id (admin only)
+
+5. server/server.js
+   - Serve /uploads as static: app.use('/uploads', express.static('uploads'))
+   - Mount image routes and contact routes
+   - Serve client/dist in production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 FRONTEND: ADMIN PANEL (/admin)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+client/src/pages/Admin.jsx — build a full admin dashboard:
+
+LAYOUT:
+- Dark sidebar (espresso brown) with category list
+- Main content area (cream background)
+- Top bar with Café logo and "Admin Panel" badge
+
+FEATURES TO BUILD:
+
+A) LOGIN GATE
+   - On page load, show a password prompt modal
+   - Input field: "Enter Admin Key"
+   - Match against VITE_ADMIN_KEY from env
+   - Store auth state in localStorage key 'cafe_admin_auth'
+   - If wrong key, show error toast
+
+B) CATEGORY SELECTOR (sidebar)
+   - List all 7 categories as clickable nav items:
+     🏠 Home Photos
+     🖼️ Hero Banners
+     🪑 Inner View
+     🍽️ Menu Items
+     🎉 Events
+     👨‍🍳 Team
+     🖼️ Gallery
+   - Active category highlighted in gold
+
+C) UPLOAD ZONE (main area — top half)
+   - React Dropzone component: drag & drop or click to browse
+   - Accepts: .jpg, .jpeg, .png, .webp — max 5MB each, up to 10 at once
+   - Show image previews in a grid before uploading
+   - Optional label input per image (e.g. "Cozy Corner Seat")
+   - "Upload to [Category]" button
+   - Progress bar during upload (use Axios onUploadProgress)
+   - Success toast: "3 photos uploaded to Inner View!"
+   - Error toast with reason if upload fails
+
+D) EXISTING IMAGES GRID (main area — bottom half)
+   - Fetch and show all images for the selected category
+   - Masonry/grid layout, 3 columns
+   - Each image card shows:
+       * The image (loaded from /uploads/category/filename)
+       * Label text below
+       * Upload date (formatted nicely)
+       * 🗑️ Delete button with confirmation dialog
+   - Smooth Framer Motion fade-in when images load
+
+E) STATS BAR (top of main area)
+   - Total images uploaded | Images in this category | Last upload time
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 FRONTEND: WEBSITE GALLERY SECTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+client/src/components/Gallery.jsx — update it to:
+
+- On mount, fetch /api/images?category=gallery via Axios
+- Display images in a masonry grid layout
+- Lightbox on click (build a simple modal, no library needed)
+- If no images uploaded yet, show a tasteful placeholder grid
+  using Unsplash café URLs as fallback
+
+client/src/components/Hero.jsx — update it to:
+- Fetch /api/images?category=hero on mount
+- If images exist, use the first one as hero background-image
+- Fallback to default Unsplash URL if array is empty
+
+client/src/pages/Home.jsx — add an "Inner View" section:
+- Fetch /api/images?category=inner-view
+- Render a horizontal scroll strip or 3-column grid
+- Section title: "Step Inside Our World"
+- Framer Motion stagger animation on image cards
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 DEPLOYMENT GUIDE (include in README.md)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Write a complete README.md with these sections:
+
+## Local Development
+
+  cd server && npm install && npm run dev      ← runs on port 5000
+  cd client && npm install && npm run dev      ← runs on port 5173
+
+## Production Build
+
+  cd client && npm run build                  ← outputs to client/dist/
+  cd server && node server.js                 ← serves dist + API
+
+## Deploying to Render.com (Backend + Full Site)
+
+  Step 1: Push entire project to GitHub (public or private repo)
+  Step 2: Go to render.com → New → Web Service
+  Step 3: Connect your GitHub repo
+  Step 4: Set these settings:
+    - Root Directory: server
+    - Build Command: npm install
+    - Start Command: node server.js
+    - Environment: Node
+  Step 5: Add Environment Variables in Render dashboard:
+    PORT, EMAIL_USER, EMAIL_PASS, RECEIVER_EMAIL,
+    CLIENT_URL, ADMIN_SECRET_KEY, NODE_ENV=production
+  Step 6: Under Disks (Render paid) or note:
+    ⚠️ Render free tier has ephemeral storage —
+    uploaded images will reset on redeploy.
+    Solution: Use Cloudinary free tier for persistent image storage.
+
+## Persistent Image Storage with Cloudinary (Recommended for Production)
+
+  Step 1: Sign up at cloudinary.com (free tier: 25GB storage)
+  Step 2: Get your: CLOUD_NAME, API_KEY, API_SECRET
+  Step 3: npm install cloudinary multer-storage-cloudinary
+  Step 4: In upload.js, replace Multer diskStorage with
+          CloudinaryStorage — images upload directly to cloud
+  Step 5: Store returned Cloudinary URL in images.json instead of local path
+  Step 6: Add to server/.env:
+    CLOUDINARY_CLOUD_NAME=your_cloud_name
+    CLOUDINARY_API_KEY=your_key
+    CLOUDINARY_API_SECRET=your_secret
+
+## Deploying Frontend to Vercel (Optional — faster CDN)
+
+  Step 1: cd client && npm run build
+  Step 2: Go to vercel.com → Import Project → Select repo
+  Step 3: Set Root Directory: client
+  Step 4: Add env variable: VITE_API_URL=https://your-render-url.onrender.com
+  Step 5: Deploy — Vercel auto-deploys on every git push
+
+## Admin Panel Access in Production
+
+  Visit: https://your-site.com/admin
+  Enter the ADMIN_SECRET_KEY you set in env
+  Upload images → they appear on website instantly
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ FINAL CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ /admin route is protected by admin key
+□ All 7 upload folders are auto-created if missing (use fs.mkdirSync)
+□ Images served as static files at /uploads/category/filename
+□ Uploaded images render in Gallery, Hero, Inner View sections
+□ Delete removes file from disk AND from images.json
+□ Sharp compresses all uploads before saving
+□ Mobile-responsive admin panel
+□ Fallback Unsplash images shown when no uploads exist
+□ images.json is gitignored (or kept but uploads/ folder is gitignored)
+□ README.md has full local + Render + Cloudinary + Vercel deploy guide
+□ npm run build completes with zero errors
+□ No API keys or secrets hardcoded anywhere in source code

@@ -6,8 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './cafeImage';
 export * from './contactInput';
 export * from './contactResult';
-export * from './errorResponse';
+export * from './deleteResult';
+export * from './errorEnvelope';
+export * from './getImagesParams';
 export * from './healthStatus';
 export * from './menuItem';
+export * from './registerImageInput';
+export * from './uploadUrlRequest';
+export * from './uploadUrlResponse';

@@ -4,6 +4,7 @@ import { About } from "@/components/About";
 import { Menu } from "@/components/Menu";
 import { Services } from "@/components/Services";
 import { Gallery } from "@/components/Gallery";
+import { InnerView } from "@/components/InnerView";
 import { Testimonials } from "@/components/Testimonials";
 import { Contact } from "@/components/Contact";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
@@ -18,6 +19,7 @@ export default function Home() {
       <Menu />
       <Services />
       <Gallery />
+      <InnerView />
       <Testimonials />
       <Contact />
       <WhatsAppButton />
